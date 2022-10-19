@@ -52,16 +52,22 @@ func (q *Queries) EmailExistValidation(ctx context.Context, email string) error 
 
 	return nil
 }
+
+const validSignInCredentials = `
+select UserId,Role,CompanyId from Users where Email = ? and Password = ?
+`
+
 func (q *Queries) SignInValidation(ctx context.Context, email string, password string) (Account, error) {
 
 	var acc Account
 
-	row := q.db.QueryRowContext(ctx, email, password)
-
-	err := row.Scan(&acc.Id, &acc.Role, &acc.CompanyId)
+	err := q.db.QueryRowContext(ctx, validSignInCredentials, email, password).Scan(&acc.Id, &acc.Role, &acc.CompanyId)
 	//User cannot sign in
-	if err != sql.ErrNoRows {
-		return Account{}, sql.ErrNoRows
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return Account{}, sql.ErrNoRows
+		}
+		return Account{}, err
 	}
 
 	//User is able to sign in

@@ -33,15 +33,40 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestEmailExistValidationTrue(t *testing.T) {
-
-	err := testQueries.EmailExistValidation(context.Background(), "JohntestSubject4@testSubject.com")
+	acc := createRandomAccount(t)
+	err := testQueries.EmailExistValidation(context.Background(), acc.Email)
 
 	require.NoError(t, err)
 }
-func TestEmailExistValidationFalse(t *testing.T) {
-	var email = "JohntestSubjec@testSubject.com"
 
-	err := testQueries.EmailExistValidation(context.Background(), email)
+func TestEmailExistValidationFalse(t *testing.T) {
+	acc := createRandomAccount(t)
+	acc.Email = acc.Email + "nomail"
+	err := testQueries.EmailExistValidation(context.Background(), acc.Email)
 
 	require.Error(t, err)
+}
+
+//Should return the essentials to provide a access key .
+func TestSignInValidationTrue(t *testing.T) {
+	randAccount := createRandomAccount(t)
+	fmt.Println(randAccount)
+	account, err := testQueries.SignInValidation(context.Background(), randAccount.Email, randAccount.Password)
+
+	require.NoError(t, err)
+
+	require.NotEmpty(t, account.Id)
+
+	require.Equal(t, randAccount.CompanyId, account.CompanyId)
+	require.Equal(t, randAccount.Role, account.Role)
+}
+
+func TestSignInValidationFalse(t *testing.T) {
+	randAccount := createRandomAccount(t)
+	randAccount.Password = randAccount.Password + "123"
+	account, err := testQueries.SignInValidation(context.Background(), randAccount.Email, randAccount.Password)
+
+	require.Error(t, err)
+
+	require.Empty(t, account)
 }
