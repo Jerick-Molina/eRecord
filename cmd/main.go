@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"eRecord/cmd/server"
+	"eRecord/internal/db"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -13,9 +15,15 @@ func main() {
 		Net:    "tcp",
 		Addr:   "192.168.3.139",
 		DBName: "BuggieDB"}
-	_, e := sql.Open("mysql", cfg.FormatDSN())
+	dbConn, e := sql.Open("mysql", cfg.FormatDSN())
 
 	if e != nil {
 
 	}
+	record := db.NewRecord(dbConn)
+
+	server := server.NewServer(record)
+
+	server.Start("localhost:8080")
+
 }

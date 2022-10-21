@@ -26,7 +26,7 @@ func RandomName() string {
 	return names[rand.Intn(n)]
 }
 
-func RandomPassword(n int) string {
+func RandomChars(n int) string {
 	var sb strings.Builder
 
 	a := len(chars)

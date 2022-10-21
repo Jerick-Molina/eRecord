@@ -26,6 +26,7 @@ type CreateAccountParams struct {
 	CompanyId int    `json:"companyId"`
 }
 
+//TODO :  Return a key to the user after the account has been created!
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) error {
 	_, err := q.db.ExecContext(ctx, createAccount, arg.FirstName, arg.LastName, arg.Email, arg.Password, arg.Role, arg.CompanyId)
 	if err != nil {
@@ -36,21 +37,20 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) er
 
 const searchAccountValidation = "select Email from Users where Email = ? "
 
-func (q *Queries) EmailExistValidation(ctx context.Context, email string) error {
+func (q *Queries) AccountCreateValidation(ctx context.Context, email string) error {
 	var usr Account
 
 	err := q.db.QueryRowContext(ctx, searchAccountValidation, email).Scan(&usr.Email)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return sql.ErrNoRows
+			return nil
 		} else {
-			fmt.Println(err)
 			return err
 		}
 	}
 
-	return nil
+	return fmt.Errorf("Email already exist")
 }
 
 const validSignInCredentials = `
@@ -65,9 +65,9 @@ func (q *Queries) SignInValidation(ctx context.Context, email string, password s
 	//User cannot sign in
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return Account{}, sql.ErrNoRows
+			return acc, fmt.Errorf("Invalid Credidentials")
 		}
-		return Account{}, err
+		return acc, err
 	}
 
 	//User is able to sign in

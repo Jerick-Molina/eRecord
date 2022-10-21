@@ -17,11 +17,11 @@ func createRandomAccount(t *testing.T) CreateAccountParams {
 		LastName:  "testSubject",
 
 		Role:      util.RandomRole(),
-		Password:  util.RandomPassword(10),
+		Password:  util.RandomChars(10),
 		CompanyId: int(util.RandomNumber(10)),
 	}
 	fullName := fmt.Sprintf("%s%s", arg.FirstName, arg.LastName)
-	arg.Email = fmt.Sprintf("%s%d@testSubject.com", fullName, arg.CompanyId)
+	arg.Email = fmt.Sprintf("%s%d@testSubject.com", fullName, util.RandomNumber(200))
 	err := testQueries.CreateAccount(context.Background(), arg)
 
 	require.NoError(t, err)
@@ -32,27 +32,28 @@ func TestCreateAccount(t *testing.T) {
 	createRandomAccount(t)
 }
 
-func TestEmailExistValidationTrue(t *testing.T) {
+func TestAccountCreateExistTrue(t *testing.T) {
 	acc := createRandomAccount(t)
-	err := testQueries.EmailExistValidation(context.Background(), acc.Email)
-
-	require.NoError(t, err)
+	err := testQueries.AccountCreateValidation(context.Background(), acc.Email)
+	require.Error(t, err)
 }
 
-func TestEmailExistValidationFalse(t *testing.T) {
+func TestAccountCreateExistFalse(t *testing.T) {
 	acc := createRandomAccount(t)
 	acc.Email = acc.Email + "nomail"
-	err := testQueries.EmailExistValidation(context.Background(), acc.Email)
+	err := testQueries.AccountCreateValidation(context.Background(), acc.Email)
 
-	require.Error(t, err)
+	require.NoError(t, err)
 }
 
 //Should return the essentials to provide a access key .
 func TestSignInValidationTrue(t *testing.T) {
 	randAccount := createRandomAccount(t)
 	fmt.Println(randAccount)
-	account, err := testQueries.SignInValidation(context.Background(), randAccount.Email, randAccount.Password)
 
+	account, err := testQueries.SignInValidation(context.Background(), randAccount.Email, randAccount.Password)
+	fmt.Println(randAccount)
+	fmt.Println(account)
 	require.NoError(t, err)
 
 	require.NotEmpty(t, account.Id)

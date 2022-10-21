@@ -14,3 +14,9 @@ type Company struct {
 	Id          int    `json:"Id"`
 	CompanyName string `json:"CompanyName"`
 }
+
+type InviteCode struct {
+	CompanyId  int
+	Role       string
+	InviteCode string
+}

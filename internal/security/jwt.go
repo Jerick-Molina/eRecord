@@ -1,6 +1,7 @@
 package security
 
 import (
+	"eRecord/util"
 	"fmt"
 	"time"
 
@@ -30,25 +31,22 @@ func CreateAccessToken(usrId int, role string, companyId int) (string, error) {
 	return tokenString, nil
 }
 
-func CreateCompanyValidToken(compName string, uniqueId string) (string, error) {
+func CreateCompanyInviteToken(compName string, givenRole string) (string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(time.Minute * 5).Unix()
 	claims["iss"] = "localhost"
-	claims["companyName"] = compName
-	claims["uniqueId"] = uniqueId
+	claims["invitationCode"] = util.RandomChars(15)
+	claims["givenRole"] = givenRole
 	tokenString, err := token.SignedString(secretKey)
 
 	if err != nil {
 		//
-		return "", nil
+		return "", err
 	}
 
 	return tokenString, nil
 }
 
-func CreateInvitationToken() {
-
-}
 func TokenReader(token string) (jwt.MapClaims, error) {
 	var err error
 	if token != "" {
