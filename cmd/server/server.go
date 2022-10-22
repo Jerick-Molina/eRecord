@@ -47,7 +47,7 @@ func (servers *Server) EndpointsHandler() {
 			auth_Api.POST("/SignIn")
 		}
 		//api.POST("/Create_Account", servers.CreateAccountRequirements, servers.createAccountByCode)
-		api.POST("/Create_Company", servers.CreateAccountWithCompany)
+		api.POST("/Create_Company", servers.CreateAccountWithCompany).Next()
 		api.POST("/SignIn", servers.UserSignIn)
 	}
 }

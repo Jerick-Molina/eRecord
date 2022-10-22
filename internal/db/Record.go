@@ -20,6 +20,9 @@ func NewRecord(db *sql.DB) *Record {
 	}
 }
 
+
+
+
 func (record *Record) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := record.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -193,3 +196,27 @@ func (record *Record) CreateAccountAndJoinCompanyTx(ctx context.Context, args Cr
 
 	return token, nil
 }
+
+
+
+
+// TX : PROJECTS
+func (record *Record) CreateProjectTx(ctx context.Context, args ...) err{
+
+	if  err :=  record.execTx(ctx,func(q *Queries) error {
+
+
+
+
+
+
+	}); err != nil {
+		return  err
+	}
+
+
+
+	return nil
+}
+
+//TX : TICKETS
