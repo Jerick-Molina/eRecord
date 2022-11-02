@@ -10,22 +10,22 @@ import (
 )
 
 type Server struct {
-	router          *gin.Engine
-	record          *db.Record
-	Status          map[string]string
-	Error           string
-	AllowAllOrigins bool
-	AllowedHeaders  []string
-	AllowedMethods  []string
+	router              *gin.Engine
+	record              *db.Record
+	Status              map[string]string
+	Error               string
+	AllowAllOrigins     bool
+	AllowedHeaders      []string
+	AllowedMethods      []string
+	AuthorizationHeader string
 }
 
 func NewServer(record *db.Record) *Server {
 	server := &Server{record: record}
 	route := gin.Default()
 	route.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-		AllowHeaders:    []string{"Authorization", "projectId", "content-type"},
-		AllowMethods:    []string{"GET", "POST"},
+		AllowAllOrigins: true, AllowHeaders: []string{"Authorization", "projectId", "content-type"},
+		AllowMethods: []string{"GET", "POST"},
 	}))
 
 	server.router = route
@@ -36,18 +36,46 @@ func NewServer(record *db.Record) *Server {
 func (server *Server) Start(host string) error {
 	return server.router.Run(host)
 }
-func (servers *Server) EndpointsHandler() {
+func (server *Server) EndpointsHandler() {
 	//This is where you init your routes
 
-	api := servers.router.Group("/api")
+	api := server.router.Group("/api")
 	{
+		routeTest_Roles := []string{"Admin"}
 
-		auth_Api := api.Group("/auth")
+		api.POST("/SignIn", server.UserSignIn)
+		api.POST("/Create/Account")
+		auth := api.Group("/auth", server.AuthorizeToken())
 		{
-			auth_Api.POST("/SignIn")
+			create := auth.Group("/create")
+			{
+				createTicketRoleParams := []string{"Admin", "Manager"}
+				create.POST("/Ticket", server.RoleAuthorization(createTicketRoleParams, server.CreateTicket))
+				create.GET("/Ticket", server.RoleAuthorization(createTicketRoleParams, server.CreateTicketParams))
+				createProjectRoleParams := []string{"Admin", "Manager"}
+				create.POST("/Project", server.RoleAuthorization(createProjectRoleParams, server.CreateProject))
+			}
+			auth.POST("/Ticket/Find/User")
+			auth.POST("/Ticket/Find/Company")
+
+			projectFindByCompanyRoleParams := []string{"Admin", "Manager"}
+			auth.POST("/Project/Find/Company", server.RoleAuthorization(projectFindByCompanyRoleParams, server.FindProjectsByCompanyId))
+
+			projectFindRoleParams := []string{"Admin", "Manager"}
+			auth.GET("/Find/Project", server.RoleAuthorization(projectFindRoleParams, server.FindAssociatedToProject))
+			auth.POST("/Test", server.RoleAuthorization(routeTest_Roles, server.InitCompany))
+
+			dashboardRoleParams := []string{"Admin", "Manager"}
+			auth.GET("/Dashboard", server.RoleAuthorization(dashboardRoleParams, server.FindTicketsAssociatedToCompany))
+			//	projectsRoleParams := []string{"Admin", "Manager"}
+			auth.GET("/Projects", server.FindProjectsByCompanyId)
+			dashboardTicketsRoleParams := []string{"Admin", "Manager"}
+			auth.GET("/Dashboard/Tickets", server.RoleAuthorization(dashboardTicketsRoleParams, server.DashboardTickets))
+			//	auth.POST("/Test2"), server.InitCompany.Use(server.RoleAuthorization([]string{"Admin", "Owner"})
 		}
-		//api.POST("/Create_Account", servers.CreateAccountRequirements, servers.createAccountByCode)
-		api.POST("/Create_Company", servers.CreateAccountWithCompany).Next()
-		api.POST("/SignIn", servers.UserSignIn)
+		//api.POST("/Create_Account", server.CreateAccountRequirements, server.createAccountByCode)
+		//	api.POST("/Create_Company", server.CreateAccountWithCompany).Use()
+		//	api.POST("/SignIn", server.UserSignIn)
+
 	}
 }

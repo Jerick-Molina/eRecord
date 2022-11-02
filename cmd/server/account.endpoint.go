@@ -54,6 +54,7 @@ func (server *Server) UserSignIn(ctx *gin.Context) {
 	return
 }
 
+//TODO: FIX THIS
 func (server *Server) CreateAccountByInviteCode(ctx *gin.Context) {
 	var req db.CreateAccountWithCompanyToken
 

@@ -3,9 +3,11 @@ package security
 import (
 	"eRecord/util"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/dgrijalva/jwt-go/v4"
+	"github.com/gin-gonic/gin"
 )
 
 var secretKey = []byte("p8cafxzquew4juy1rk9f")
@@ -50,15 +52,21 @@ func CreateCompanyInviteToken(compName string, givenRole string) (string, error)
 func TokenReader(token string) (jwt.MapClaims, error) {
 	var err error
 	if token != "" {
+		bearer := token[:6]
 		token = token[7:]
+		if bearer != "Bearer" {
+			return nil, fmt.Errorf("Not bearer token")
+		}
 		token, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, nil
+				return nil, fmt.Errorf("Token not valid")
 			}
+
 			return secretKey, nil
 		})
+
 		if err != nil {
-			fmt.Println(err.Error())
+
 			return nil, err
 		}
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
@@ -66,7 +74,21 @@ func TokenReader(token string) (jwt.MapClaims, error) {
 			return claims, nil
 
 		}
+
 		return nil, err
 	}
+
 	return nil, err
+}
+
+func GetJwtMap(ctx *gin.Context) (jwt.MapClaims, error) {
+	claims, exist := ctx.Get("claims")
+	if exist == false {
+		err := fmt.Errorf("MAJOR INTERNAL ERR")
+
+		return nil, err
+	}
+	ref := reflect.ValueOf(claims)
+	c := ref.Interface()
+	return c.(jwt.MapClaims), nil
 }

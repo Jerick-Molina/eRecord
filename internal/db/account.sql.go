@@ -73,3 +73,47 @@ func (q *Queries) SignInValidation(ctx context.Context, email string, password s
 	//User is able to sign in
 	return acc, nil
 }
+
+const findAllUsersAssociatedByCompanyId = `
+select UserId,FirstName,LastName,CompanyId from Users where CompanyId = ? `
+
+func (q *Queries) FindAllUsersAssociatedByCompanyId(ctx context.Context, companyId int) ([]Account, error) {
+	var accs []Account
+
+	results, err := q.db.QueryContext(ctx, findAllUsersAssociatedByCompanyId, companyId)
+	if err != nil {
+		return accs, err
+	}
+
+	for results.Next() {
+		var acc Account
+		if err := results.Scan(&acc.Id, &acc.FirstName, &acc.LastName, &acc.CompanyId); err != nil {
+			return accs, err
+		}
+		accs = append(accs, acc)
+	}
+
+	return accs, nil
+}
+
+const findAllUsersAssociatedByProjectId = `
+select UserId,FirstName,LastName,Email,Role from Users where CompanyId = ?`
+
+func (q *Queries) FindAllUsersAssociatedByProjectId(ctx context.Context, companyId int) ([]Account, error) {
+	var accs []Account
+
+	results, err := q.db.QueryContext(ctx, findAllUsersAssociatedByProjectId, companyId)
+	if err != nil {
+		return accs, err
+	}
+
+	for results.Next() {
+		var acc Account
+		if err := results.Scan(&acc.Id, &acc.FirstName, &acc.LastName, &acc.Email, &acc.Role); err != nil {
+			return accs, err
+		}
+		accs = append(accs, acc)
+	}
+
+	return accs, nil
+}

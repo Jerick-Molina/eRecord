@@ -21,33 +21,32 @@ type InviteCode struct {
 	InviteCode string
 }
 
-
 type Project struct {
-
-	Id int `json:CompanyId`
-	ProjectName string`json:Name`
-	CreatedByName string `json:CreatedByName`
-	CreatedById  string `json:CreatedById`
-	AssociatedCompany int `json:AssociatedCompany`
-
+	Id                int    `json:"ProjectId"`
+	ProjectName       string `json:"Name"`
+	Description       string `json:"Description"`
+	AssociatedCompany int    `json:"CompanyId"`
 }
 
 type Ticket struct {
-	Id int `json:TicketId`
-	TicketName string `json:Name`
-	Description string `json:Description`
-	SeverityLevel string `json:SeverityLevel`
-	AssociatedCompany int `json:AssociatedCompany`
-	AssignedUser int `json:AssignedUser`
+	Id                int    `json:"TicketId"`
+	TicketName        string `json:"Name"`
+	Status            string `json:"Status"`
+	AssignedUser      int    `json:"AssignedTo"`
+	CreatedBy         int    `json:"CreatedById"`
+	AssociatedCompany int    `json:"CompanyId"`
+	Description       string `json:"Description"`
+	SeverityLevel     string `json:"Priority"`
+	AssignedProject   int    `json:"ProjectId"`
 }
 
-type AccessTokenClaims {
-	UserId string
-	Role string
+type AccessTokenClaims struct {
+	UserId    string
+	Role      string
 	CompanyId string
 }
 
-type InviteTokenClaims {
+type InviteTokenClaims struct {
 	InvitationCode string
-	GivenRole string
+	GivenRole      string
 }

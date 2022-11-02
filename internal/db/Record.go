@@ -20,9 +20,6 @@ func NewRecord(db *sql.DB) *Record {
 	}
 }
 
-
-
-
 func (record *Record) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := record.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -197,26 +194,168 @@ func (record *Record) CreateAccountAndJoinCompanyTx(ctx context.Context, args Cr
 	return token, nil
 }
 
-
-
-
 // TX : PROJECTS
-func (record *Record) CreateProjectTx(ctx context.Context, args ...) err{
 
-	if  err :=  record.execTx(ctx,func(q *Queries) error {
+type CreateProjectTxParams struct {
+	ProjectName       string `json:"Name"`
+	Description       string `json:"Descrption"`
+	AssociatedCompany int    `"json:"CompanyId""`
+}
 
+func (record *Record) CreateProjectTx(ctx context.Context, args CreateProjectTxParams) error {
 
+	if err := record.execTx(ctx, func(q *Queries) error {
 
+		err := q.CreateProjectByAssociatedCompany(ctx, args)
+		if err != nil {
 
+			return err
+		}
 
-
+		return nil
 	}); err != nil {
-		return  err
+		return err
 	}
-
-
 
 	return nil
 }
 
+func (record *Record) FindProjectByAssociatedCompanyTx(ctx context.Context, companyId int) ([]Project, error) {
+	var projects []Project
+	var err error
+
+	err = record.execTx(ctx, func(q *Queries) error {
+		projects, err = q.FindProjectsByAssociatedCompany(ctx, companyId)
+		if err != nil {
+
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return projects, err
+	}
+
+	return projects, nil
+}
+
+func (record *Record) FindSingleProjectTx(ctx context.Context, companyId int, projectId int) (error, any) {
+	var tkts []Ticket
+	var usrs []Account
+	var project Project
+	var err error
+
+	var array []any
+	err = record.execTx(ctx, func(q *Queries) error {
+
+		tkts, err = q.FindTicketsByAssociatedProject(ctx, companyId, projectId)
+		if err != nil {
+			return err
+		}
+		array = append(array, tkts)
+		usrs, err = q.FindAllUsersAssociatedByProjectId(ctx, companyId)
+		if err != nil {
+			return err
+		}
+		array = append(array, usrs)
+
+		project, err = q.FindSingleProjectByAssociatedCompany(ctx, companyId, projectId)
+		if err != nil {
+			return err
+		}
+		array = append(array, project)
+		return nil
+	})
+	if err != nil {
+		return err, nil
+	}
+
+	return err, array
+}
+
 //TX : TICKETS
+
+//TX: DATA
+
+// func (record *Record) GetDashboardDataTx(ctx context.Context)
+func (record *Record) CreateTicketDashboardTx(ctx context.Context, companyId int) (error, any) {
+	var err error
+	var usrs []Account
+	var projects []Project
+
+	var array []any
+	err = record.execTx(ctx, func(q *Queries) error {
+		projects, err = q.FindProjectsByAssociatedCompany(ctx, companyId)
+		if err != nil {
+			fmt.Println("Err?")
+			return err
+		}
+		array = append(array, projects)
+
+		usrs, err = q.FindAllUsersAssociatedByCompanyId(ctx, companyId)
+		if err != nil {
+			fmt.Println("Err?")
+			return err
+		}
+		array = append(array, usrs)
+
+		return nil
+	})
+	if err != nil {
+		return err, nil
+	}
+
+	return err, array
+}
+func (record *Record) FindTicketByAssociatedCompanyTx(ctx context.Context, companyId int) ([]Ticket, error) {
+	var tkts []Ticket
+	var err error
+
+	err = record.execTx(ctx, func(q *Queries) error {
+
+		tkts, err = q.FindTicketsByAssociatedCompany(ctx, companyId)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return []Ticket{}, err
+	}
+
+	return tkts, nil
+}
+
+func (record *Record) FindTicketsDashboardTx(ctx context.Context, companyId int) (error, any) {
+	var tkts []Ticket
+	var usrs []Account
+	var projects []Project
+	var err error
+
+	var array []any
+	err = record.execTx(ctx, func(q *Queries) error {
+
+		tkts, err = q.FindTicketsByAssociatedCompany(ctx, companyId)
+		if err != nil {
+			return err
+		}
+		array = append(array, tkts)
+
+		usrs, err = q.FindAllUsersAssociatedByCompanyId(ctx, companyId)
+		if err != nil {
+			return err
+		}
+		array = append(array, usrs)
+		projects, err = q.FindProjectsByAssociatedCompany(ctx, companyId)
+		if err != nil {
+			return err
+		}
+		array = append(array, projects)
+		return nil
+	})
+	if err != nil {
+		return err, nil
+	}
+
+	return err, array
+}
